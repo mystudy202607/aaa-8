@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-Hans" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>注意力就是你所需要的一切｜Transformer 原论文精读，从自注意力到多头机制 · AI 术语表 ｜ Attention Is All You Need</title>
+<meta name="description" content="注意力就是你所需要的一切｜Transformer 原论文精读，从自注意力到多头机制 · AI 术语表 — 逐句点读、中英对照、AI 术语标注">
+<style>
+:root{
+  --bg:#fbfbfd; --fg:#1d1d1f; --muted:#6e6e73; --card:#ffffff; --line:#e5e5ea;
+  --accent:#0a84ff; --accent-soft:#eaf3ff; --hl:#fff3bf; --hl-line:#e8b931;
+  --term-bg:#f3ecff; --term-line:#8b5cf6; --active:#fef6c7;
+  --radius:14px; --maxw:880px;
+}
+html[data-theme="dark"]{
+  --bg:#111113; --fg:#e8e8ea; --muted:#98989d; --card:#1b1b1e; --line:#2c2c30;
+  --accent:#4da3ff; --accent-soft:#16283d; --hl:#5a4a00; --hl-line:#d9a800;
+  --term-bg:#241a3a; --term-line:#a78bfa; --active:#3a3200;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased;
+}
+body[data-font="s"]{font-size:15px}
+body[data-font="l"]{font-size:18px}
+body[data-font="xl"]{font-size:20px}
+a{color:var(--accent); text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:50; backdrop-filter:saturate(180%) blur(14px);
+  background:color-mix(in srgb, var(--bg) 82%, transparent);
+  border-bottom:1px solid var(--line);
+}
+.topbar-in{max-width:var(--maxw); margin:0 auto; padding:8px 16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.brand{font-weight:650; font-size:.92em; letter-spacing:.2px; white-space:nowrap}
+.brand small{display:block; font-weight:400; color:var(--muted); font-size:.78em; letter-spacing:0}
+.bar-spacer{flex:1}
+.btn{
+  appearance:none; border:1px solid var(--line); background:var(--card); color:var(--fg);
+  border-radius:9px; padding:5px 10px; font-size:.82em; cursor:pointer; line-height:1.4;
+  font-family:inherit; transition:background .15s,border-color .15s;
+}
+.btn:hover{border-color:var(--accent); color:var(--accent)}
+.btn.on{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn-group{display:flex; gap:6px; align-items:center}
+
+/* ---------- progress ---------- */
+.progress{height:3px; background:var(--line); position:relative}
+.progress i{display:block; height:100%; width:0; background:var(--accent); transition:width .2s}
+
+/* ---------- hero ---------- */
+main{max-width:var(--maxw); margin:0 auto; padding:26px 18px 120px}
+.hero{display:flex; gap:18px; align-items:flex-start; margin-bottom:8px}
+.hero img{width:190px; flex-shrink:0; border-radius:var(--radius); box-shadow:0 3px 14px rgba(0,0,0,.13)}
+.hero h1{font-size:1.42em; line-height:1.32; margin:0 0 8px; font-weight:650}
+.hero h1 .zh{display:block; font-size:.72em; color:var(--muted); font-weight:500; margin-top:6px}
+.meta{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 0}
+.chip{background:var(--card); border:1px solid var(--line); border-radius:999px; padding:3px 11px; font-size:.78em; color:var(--muted)}
+.chip b{color:var(--fg); font-weight:600}
+.summary{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; margin:20px 0}
+.summary h2{margin:0 0 10px; font-size:.86em; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); font-weight:600}
+.summary p{margin:0 0 10px; font-size:.92em}
+.summary p:last-child{margin-bottom:0}
+.summary .en{color:var(--muted); font-size:.86em}
+
+/* ---------- toc ---------- */
+.toc{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px 18px; margin:18px 0}
+.toc h2{margin:0 0 8px; font-size:.86em; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); font-weight:600}
+.toc ol{margin:0; padding-left:22px; columns:2; column-gap:26px}
+.toc li{margin:3px 0; font-size:.9em; break-inside:avoid}
+.toc a{color:var(--fg)}
+.toc a:hover{color:var(--accent)}
+.toc .t{color:var(--muted); font-size:.85em; margin-left:6px}
+
+/* ---------- toolbar ---------- */
+.toolbar{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:11px 14px; margin:18px 0; position:sticky; top:52px; z-index:40;
+}
+.toolbar input[type=search]{
+  flex:1; min-width:150px; padding:6px 11px; border:1px solid var(--line); border-radius:9px;
+  background:var(--bg); color:var(--fg); font-family:inherit; font-size:.85em;
+}
+.toolbar input[type=search]:focus{outline:none; border-color:var(--accent)}
+.speed{display:flex; align-items:center; gap:5px; font-size:.8em; color:var(--muted)}
+select{background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:4px 7px; font-family:inherit; font-size:.9em}
+
+/* ---------- transcript ---------- */
+.chapter{margin:38px 0 0; padding-top:8px}
+.chapter h2{
+  font-size:1.06em; font-weight:650; margin:0 0 4px; padding:8px 0 8px 13px;
+  border-left:4px solid var(--accent); scroll-margin-top:110px;
+}
+.chapter .ct{color:var(--muted); font-size:.8em; font-weight:400; margin-left:9px}
+.row{display:flex; gap:12px; align-items:flex-start; padding:4px 0; border-radius:10px}
+.row[hidden]{display:none}
+.row:hover{background:color-mix(in srgb, var(--accent) 5%, transparent)}
+.row.active{background:var(--active); box-shadow:inset 3px 0 0 var(--hl-line)}
+.row.hit{background:var(--accent-soft)}
+.main-col{flex:1; min-width:0}
+.sent{display:flex; gap:9px; align-items:baseline; padding:6px 8px; border-radius:8px; cursor:pointer}
+.sent:hover .play{color:var(--accent); opacity:1}
+.play{
+  flex-shrink:0; width:26px;height:26px; border:1px solid var(--line); background:var(--card);
+  border-radius:50%; cursor:pointer; color:var(--muted); font-size:10px; line-height:1;
+  display:inline-flex; align-items:center; justify-content:center; padding:0;
+  transform:translateY(3px); transition:all .15s;
+}
+.play:hover{border-color:var(--accent); color:var(--accent)}
+.row.active .play{background:var(--hl-line); border-color:var(--hl-line); color:#fff}
+.txt{flex:1; min-width:0}
+.en{display:block}
+.zh{display:block; color:var(--muted); font-size:.9em; margin-top:2px}
+body[data-zh="off"] .zh{display:none}
+.ts{font-variant-numeric:tabular-nums; color:var(--muted); font-size:.76em; margin-right:2px; user-select:none}
+mark{
+  background:var(--hl); color:inherit; padding:1px 3px; border-radius:4px; cursor:help;
+  border-bottom:1.5px dotted var(--hl-line);
+}
+mark.term{background:var(--term-bg); border-bottom-color:var(--term-line)}
+.side{
+  width:210px; flex-shrink:0; background:var(--term-bg); border-left:3px solid var(--term-line);
+  border-radius:8px; padding:7px 11px; font-size:.78em; line-height:1.6; color:var(--fg);
+}
+.side .w{font-weight:650}
+.side .ph{color:var(--muted); font-size:.92em}
+.side .df{color:var(--muted); display:block; margin-top:2px}
+.side .cat{
+  display:inline-block; font-size:.86em; padding:0 6px; border-radius:6px;
+  background:var(--term-line); color:#fff; margin-top:4px;
+}
+.tooltip{
+  position:fixed; z-index:100; max-width:330px; background:var(--card); color:var(--fg);
+  border:1px solid var(--line); border-radius:11px; padding:11px 14px; font-size:.85em;
+  box-shadow:0 8px 30px rgba(0,0,0,.2); pointer-events:none; opacity:0; transition:opacity .13s;
+}
+.tooltip.show{opacity:1}
+.tooltip .w{font-weight:650; font-size:1.06em}
+.tooltip .ph{color:var(--muted)}
+.tooltip .df{display:block; margin-top:6px; line-height:1.6}
+
+/* ---------- vocab page bits ---------- */
+.vgroup{margin:26px 0}
+.vgroup h2{font-size:1em; border-left:4px solid var(--term-line); padding-left:11px; margin-bottom:10px}
+.vlist{display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:9px}
+.vcard{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 13px}
+.vcard .w{font-weight:650}
+.vcard .ph{color:var(--muted); font-size:.85em}
+.vcard .df{display:block; color:var(--muted); font-size:.85em; margin-top:3px; line-height:1.55}
+.vcard .cn{color:var(--accent); font-size:.92em}
+
+/* ---------- misc ---------- */
+.kv{position:fixed; right:16px; bottom:16px; z-index:60; display:flex; flex-direction:column; gap:7px}
+.kv .btn{box-shadow:0 4px 14px rgba(0,0,0,.13)}
+.top{font-size:.8em}
+.note{color:var(--muted); font-size:.8em; text-align:center; margin-top:50px; line-height:1.7}
+@media (max-width:720px){
+  .hero{flex-direction:column}
+  .hero img{width:100%; max-width:290px}
+  .toc ol{columns:1}
+  .side{width:auto; margin:4px 0 8px 34px; border-left:none; border-top:3px solid var(--term-line)}
+  .row{flex-direction:column; gap:0}
+}
+@media print{
+  .topbar,.toolbar,.kv,.progress{display:none}
+  body{background:#fff; font-size:11pt}
+  .row{break-inside:avoid}
+  .side{border-left:2px solid #999}
+}
+</style>
+</head>
+<body data-font="m" data-zh="on">
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">注意力就是你所需要的一切｜Transformer 原论文精读，从自注意力到多头机制 · AI 术语表<small>AI 术语表</small></div>
+    <div class="bar-spacer"></div>
+    <div class="btn-group">
+      <button class="btn" id="b-zh" title="显示/隐藏中文 (T)">中文</button>
+      <button class="btn" id="b-auto" title="连播开关 (C)">连播</button>
+      <button class="btn" id="b-theme" title="深浅色">◐</button>
+      <button class="btn" id="b-font" title="字号">A</button>
+      <a class="btn" href="vocab.html" title="AI 术语表">术语表</a>
+    </div>
+  </div>
+  <div class="progress"><i id="prog"></i></div>
+</div>
+
+<main>
+  <section class="hero">
+    <img src="thumbnail.jpg" alt="课程缩略图">
+    <div>
+      <h1>Attention Is All You Need<span class="zh">注意力就是你所需要的一切｜Transformer 原论文精读，从自注意力到多头机制 · AI 术语表</span></h1>
+      <div class="meta">
+        <span class="chip">时长 <b>27:07</b></span>
+        <span class="chip">句数 <b>526</b></span>
+        <span class="chip">术语 <b>108</b></span>
+        <span class="chip">章节 <b>20</b></span>
+        <span class="chip" id="resume-chip" hidden>上次听到 <b id="resume-t">--:--</b></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="summary">
+    <h2>摘要</h2>
+    <p>本讲出现的 108 个词汇，按 5 类整理。</p>
+    <p class="en">108 vocabulary items used in this lecture.</p>
+  </section>
+
+  <nav class="toc" style="display:none">
+    <h2>章节目录</h2>
+    <ol></ol>
+  </nav>
+
+  <div class="toolbar" style="display:none">
+    <input type="search" id="q" placeholder="搜索英文、中文或术语…">
+    <span class="speed">速度
+      <select id="rate">
+        <option value="0.75">0.75×</option>
+        <option value="1" selected>1×</option>
+        <option value="1.25">1.25×</option>
+        <option value="1.5">1.5×</option>
+        <option value="2">2×</option>
+      </select>
+    </span>
+    <span class="speed"><span id="hits">就绪</span></span>
+  </div>
+
+  <audio id="player" preload="none"></audio>
+  <article id="transcript"><section class="vgroup" data-cat="神经网络基础"><h2>神经网络基础 <span class="ct">75 条</span></h2><div class="vlist"><div class="vcard"><span class="w">addressing scheme</span> <span class="ph"></span><span class="cn">寻址机制</span><span class="df">注意力用键索引隐藏状态的软寻址方式。</span></div><div class="vcard"><span class="w">attention</span> <span class="ph"></span><span class="cn">注意力</span><span class="df">让模型动态关注输入序列中不同位置的机制。</span></div><div class="vcard"><span class="w">attention computed</span> <span class="ph"></span><span class="cn">注意力计算</span><span class="df">用查询和键值对计算加权输出的过程。</span></div><div class="vcard"><span class="w">attention distribution</span> <span class="ph"></span><span class="cn">注意力分布</span><span class="df">查询对各个键的权重概率分布。</span></div><div class="vcard"><span class="w">attention is all you need</span> <span class="ph"></span><span class="cn">《Attention Is All You Need》</span><span class="df">Google提出Transformer的论文，主张仅用注意力。</span></div><div class="vcard"><span class="w">attention mechanism</span> <span class="ph"></span><span class="cn">注意力机制</span><span class="df">通过查询与键值对计算加权表示的核心机制。</span></div><div class="vcard"><span class="w">attention output</span> <span class="ph"></span><span class="cn">注意力输出</span><span class="df">查询按权重聚合值后得到的表示。</span></div><div class="vcard"><span class="w">attention over the input sequence</span> <span class="ph"></span><span class="cn">输入序列注意力</span><span class="df">对输入序列各位置分配不同关注权重。</span></div><div class="vcard"><span class="w">attributes</span> <span class="ph"></span><span class="cn">属性</span><span class="df">被编码为值向量的对象特征，如姓名、身高。</span></div><div class="vcard"><span class="w">decode</span> <span class="ph"></span><span class="cn">解码</span><span class="df">从内部表示逐步生成目标词的过程。</span></div><div class="vcard"><span class="w">decoder</span> <span class="ph"></span><span class="cn">解码器</span><span class="df">根据编码信息逐步生成输出序列的模块。</span></div><div class="vcard"><span class="w">differentiable turing machines</span> <span class="ph"></span><span class="cn">可微图灵机</span><span class="df">带可微读写记忆的神经网络计算模型。</span></div><div class="vcard"><span class="w">encode</span> <span class="ph"></span><span class="cn">编码</span><span class="df">将输入句子转换为内部表示的过程。</span></div><div class="vcard"><span class="w">encoded output</span> <span class="ph"></span><span class="cn">编码输出</span><span class="df">编码器或解码器产生的隐藏表示输出。</span></div><div class="vcard"><span class="w">encoder</span> <span class="ph"></span><span class="cn">编码器</span><span class="df">把源句子转换为隐藏表示的网络部分。</span></div><div class="vcard"><span class="w">encoder function</span> <span class="ph"></span><span class="cn">编码器函数</span><span class="df">RNN中根据当前词和隐藏状态更新状态的函数。</span></div><div class="vcard"><span class="w">encoder-decoder</span> <span class="ph"></span><span class="cn">编码器-解码器</span><span class="df">先编码输入再解码输出的经典序列架构。</span></div><div class="vcard"><span class="w">encoding part</span> <span class="ph"></span><span class="cn">编码部分</span><span class="df">网络中负责把输入变成隐藏表示的组件。</span></div><div class="vcard"><span class="w">grammar</span> <span class="ph"></span><span class="cn">语法</span><span class="df">语言的句法规则，解码器可学习。</span></div><div class="vcard"><span class="w">hidden representation</span> <span class="ph"></span><span class="cn">隐藏表示</span><span class="df">模型对输入编码后得到的内部向量表示。</span></div><div class="vcard"><span class="w">hidden state</span> <span class="ph"></span><span class="cn">隐藏状态</span><span class="df">神经网络中保留历史信息的内部状态向量。</span></div><div class="vcard"><span class="w">indexing scheme</span> <span class="ph"></span><span class="cn">索引方案</span><span class="df">用键来寻址和选择值的方式。</span></div><div class="vcard"><span class="w">information flow</span> <span class="ph"></span><span class="cn">信息流动</span><span class="df">信息在编码器到解码器间传递的路径。</span></div><div class="vcard"><span class="w">initialize with zeros</span> <span class="ph"></span><span class="cn">零初始化</span><span class="df">将初始隐藏状态设为全零向量。</span></div><div class="vcard"><span class="w">input embedding</span> <span class="ph"></span><span class="cn">输入嵌入</span><span class="df">将源句子词元转换为向量的层。</span></div><div class="vcard"><span class="w">input sentence</span> <span class="ph"></span><span class="cn">输入句子</span><span class="df">送入模型进行编码的原始句子。</span></div><div class="vcard"><span class="w">input sequence</span> <span class="ph"></span><span class="cn">输入序列</span><span class="df">模型按顺序处理的输入词元序列。</span></div><div class="vcard"><span class="w">key vector</span> <span class="ph"></span><span class="cn">键向量</span><span class="df">表示某个位置可被查询匹配的向量。</span></div><div class="vcard"><span class="w">key-value pairs</span> <span class="ph"></span><span class="cn">键值对</span><span class="df">编码器产生的可被查询检索的键和值组合。</span></div><div class="vcard"><span class="w">keys</span> <span class="ph"></span><span class="cn">键</span><span class="df">注意力中用于索引和匹配隐藏状态的向量。</span></div><div class="vcard"><span class="w">keys values queries</span> <span class="ph"></span><span class="cn">键值查询</span><span class="df">注意力机制的三要素，分别负责索引、内容和检索。</span></div><div class="vcard"><span class="w">language task</span> <span class="ph"></span><span class="cn">语言任务</span><span class="df">如翻译等需要处理自然语言的任务。</span></div><div class="vcard"><span class="w">layers</span> <span class="ph"></span><span class="cn">层</span><span class="df">神经网络中依次堆叠的计算模块。</span></div><div class="vcard"><span class="w">long-range dependencies</span> <span class="ph"></span><span class="cn">长程依赖</span><span class="df">序列中距离较远词元之间的依赖关系。</span></div><div class="vcard"><span class="w">lstm</span> <span class="ph"></span><span class="cn">长短期记忆网络</span><span class="df">带门控的RNN，缓解长程依赖问题。</span></div><div class="vcard"><span class="w">memory of values</span> <span class="ph"></span><span class="cn">值记忆</span><span class="df">注意力中存放可被查询索引的值集合。</span></div><div class="vcard"><span class="w">multi-head attention</span> <span class="ph"></span><span class="cn">多头注意力</span><span class="df">并行运行多组注意力以捕捉不同子空间信息。</span></div><div class="vcard"><span class="w">natural language processing</span> <span class="ph"></span><span class="cn">自然语言处理</span><span class="df">NLP全称，处理文本和语言任务。</span></div><div class="vcard"><span class="w">neural network</span> <span class="ph"></span><span class="cn">神经网络</span><span class="df">由多层可学习参数组成的函数逼近器。</span></div><div class="vcard"><span class="w">neural network layers</span> <span class="ph"></span><span class="cn">神经网络层</span><span class="df">逐层变换表示并提取特征的网络结构。</span></div><div class="vcard"><span class="w">neural turing machines</span> <span class="ph"></span><span class="cn">神经图灵机</span><span class="df">用注意力读写外部记忆的神经网络架构。</span></div><div class="vcard"><span class="w">nlp</span> <span class="ph"></span><span class="cn">自然语言处理</span><span class="df">让计算机理解与生成人类语言的领域。</span></div><div class="vcard"><span class="w">one step projections</span> <span class="ph"></span><span class="cn">单步投影</span><span class="df">Transformer每步仅做一次投影计算，不循环。</span></div><div class="vcard"><span class="w">output embedding</span> <span class="ph"></span><span class="cn">输出嵌入</span><span class="df">将目标句子词元转换为向量的层。</span></div><div class="vcard"><span class="w">output sentence</span> <span class="ph"></span><span class="cn">输出句子</span><span class="df">模型最终生成的句子。</span></div><div class="vcard"><span class="w">output word</span> <span class="ph"></span><span class="cn">输出词</span><span class="df">解码器当前步生成的词。</span></div><div class="vcard"><span class="w">paradigm shift</span> <span class="ph"></span><span class="cn">范式转变</span><span class="df">从循环网络转向纯注意力架构的转变。</span></div><div class="vcard"><span class="w">path length</span> <span class="ph"></span><span class="cn">路径长度</span><span class="df">信息从源词传到解码器需经过的变换步数。</span></div><div class="vcard"><span class="w">positional encoding</span> <span class="ph"></span><span class="cn">位置编码</span><span class="df">用三角函数为词元注入位置信息的编码。</span></div><div class="vcard"><span class="w">previous word</span> <span class="ph"></span><span class="cn">前一个词</span><span class="df">解码器上一步生成的词，作为当前输入。</span></div><div class="vcard"><span class="w">queries</span> <span class="ph"></span><span class="cn">查询</span><span class="df">注意力中用来检索相关键值对的向量。</span></div><div class="vcard"><span class="w">query vector</span> <span class="ph"></span><span class="cn">查询向量</span><span class="df">表示当前需要检索什么信息的向量。</span></div><div class="vcard"><span class="w">recurrence</span> <span class="ph"></span><span class="cn">循环</span><span class="df">序列计算中反复使用上一步状态的性质。</span></div><div class="vcard"><span class="w">recurrent neural networks</span> <span class="ph"></span><span class="cn">循环神经网络</span><span class="df">RNN全称，用于序列建模但难以并行。</span></div><div class="vcard"><span class="w">representation</span> <span class="ph"></span><span class="cn">表示</span><span class="df">用向量或张量编码输入信息。</span></div><div class="vcard"><span class="w">rnn</span> <span class="ph"></span><span class="cn">循环神经网络</span><span class="df">按时间步处理序列并传递隐藏状态的网络。</span></div><div class="vcard"><span class="w">seq2seq</span> <span class="ph"></span><span class="cn">序列到序列</span><span class="df">将输入序列编码后解码为输出序列的框架。</span></div><div class="vcard"><span class="w">sequence</span> <span class="ph"></span><span class="cn">序列</span><span class="df">按顺序排列的词元或向量集合。</span></div><div class="vcard"><span class="w">sequence processing</span> <span class="ph"></span><span class="cn">序列处理</span><span class="df">对有序词元序列进行建模的任务。</span></div><div class="vcard"><span class="w">softmax architecture</span> <span class="ph"></span><span class="cn">Softmax结构</span><span class="df">通过Softmax对键做权重归一化的注意力结构。</span></div><div class="vcard"><span class="w">source sentence</span> <span class="ph"></span><span class="cn">源句子</span><span class="df">待翻译或待处理的原始语言句子。</span></div><div class="vcard"><span class="w">source sentence encoder</span> <span class="ph"></span><span class="cn">源句子编码器</span><span class="df">编码源句子并生成键和值的网络部分。</span></div><div class="vcard"><span class="w">start state</span> <span class="ph"></span><span class="cn">起始状态</span><span class="df">序列开始时给RNN的初始隐藏状态。</span></div><div class="vcard"><span class="w">target language</span> <span class="ph"></span><span class="cn">目标语言</span><span class="df">翻译要生成的语言，如德语。</span></div><div class="vcard"><span class="w">target sentence</span> <span class="ph"></span><span class="cn">目标句子</span><span class="df">模型已生成或待生成的目标语言句子。</span></div><div class="vcard"><span class="w">target sentence encoder</span> <span class="ph"></span><span class="cn">目标句子编码器</span><span class="df">编码已生成目标句子并产生查询的网络部分。</span></div><div class="vcard"><span class="w">token</span> <span class="ph"></span><span class="cn">词元</span><span class="df">文本序列中被处理的最小单位，如单词。</span></div><div class="vcard"><span class="w">transformer</span> <span class="ph"></span><span class="cn">Transformer</span><span class="df">完全基于注意力、可并行处理的序列模型架构。</span></div><div class="vcard"><span class="w">transformer architecture</span> <span class="ph"></span><span class="cn">Transformer架构</span><span class="df">由编码器和解码器堆叠、无循环的架构。</span></div><div class="vcard"><span class="w">transformer networks</span> <span class="ph"></span><span class="cn">Transformer 网络</span><span class="df">完全基于注意力构建的序列到序列模型。</span></div><div class="vcard"><span class="w">translation</span> <span class="ph"></span><span class="cn">翻译</span><span class="df">将源语言句子转换为目标语言句子。</span></div><div class="vcard"><span class="w">value vector</span> <span class="ph"></span><span class="cn">值向量</span><span class="df">与键对应、实际被聚合的内容向量。</span></div><div class="vcard"><span class="w">values</span> <span class="ph"></span><span class="cn">值</span><span class="df">注意力中与键关联、被加权汇总的信息向量。</span></div><div class="vcard"><span class="w">word embedding</span> <span class="ph"></span><span class="cn">词嵌入</span><span class="df">将离散词映射为连续向量的表示。</span></div><div class="vcard"><span class="w">word vector</span> <span class="ph"></span><span class="cn">词向量</span><span class="df">将单词表示为数值向量的方法。</span></div></div></section><section class="vgroup" data-cat="反向传播与梯度"><h2>反向传播与梯度 <span class="ct">4 条</span></h2><div class="vlist"><div class="vcard"><span class="w">back propagation</span> <span class="ph"></span><span class="cn">反向传播</span><span class="df">根据损失沿计算图回传梯度更新参数。</span></div><div class="vcard"><span class="w">differentiable</span> <span class="ph"></span><span class="cn">可微的</span><span class="df">函数处处有梯度，可用反向传播训练。</span></div><div class="vcard"><span class="w">differentiable max</span> <span class="ph"></span><span class="cn">可微最大值</span><span class="df">用 Softmax 近似最大操作以便梯度回传。</span></div><div class="vcard"><span class="w">multi-step back propagation</span> <span class="ph"></span><span class="cn">多步反向传播</span><span class="df">RNN中需沿多个时间步回传梯度的过程。</span></div></div></section><section class="vgroup" data-cat="数学与微积分"><h2>数学与微积分 <span class="ct">19 条</span></h2><div class="vlist"><div class="vcard"><span class="w">aligned</span> <span class="ph"></span><span class="cn">对齐</span><span class="df">两个向量方向相近、点积较大的状态。</span></div><div class="vcard"><span class="w">attention weights</span> <span class="ph"></span><span class="cn">注意力权重</span><span class="df">Softmax 后表示各位置重要程度的数值。</span></div><div class="vcard"><span class="w">binary encoding</span> <span class="ph"></span><span class="cn">二进制编码</span><span class="df">用多频率波形高低表示位置的方式。</span></div><div class="vcard"><span class="w">continuous encoding</span> <span class="ph"></span><span class="cn">连续编码</span><span class="df">位置编码以连续值而非离散位表示位置。</span></div><div class="vcard"><span class="w">distribution</span> <span class="ph"></span><span class="cn">分布</span><span class="df">注意力权重形成的概率分布。</span></div><div class="vcard"><span class="w">dot product</span> <span class="ph"></span><span class="cn">点积</span><span class="df">两向量对应元素乘积之和，衡量相似度。</span></div><div class="vcard"><span class="w">exponential function</span> <span class="ph"></span><span class="cn">指数函数</span><span class="df">以 e 为底的函数，Softmax 中放大差异。</span></div><div class="vcard"><span class="w">high dimensions</span> <span class="ph"></span><span class="cn">高维空间</span><span class="df">向量维度很高的空间，随机向量近似正交。</span></div><div class="vcard"><span class="w">inner product</span> <span class="ph"></span><span class="cn">内积</span><span class="df">向量间的乘积和，可表示方向和相似性。</span></div><div class="vcard"><span class="w">maximum function</span> <span class="ph"></span><span class="cn">最大值函数</span><span class="df">选取最大元素的函数，Softmax 是其可微近似。</span></div><div class="vcard"><span class="w">multiply by value</span> <span class="ph"></span><span class="cn">与值相乘</span><span class="df">将注意力权重乘到值向量上以聚合信息。</span></div><div class="vcard"><span class="w">query-key dot product</span> <span class="ph"></span><span class="cn">查询-键点积</span><span class="df">计算查询与每个键的相似度分数。</span></div><div class="vcard"><span class="w">renormalization</span> <span class="ph"></span><span class="cn">重归一化</span><span class="df">把指数化后的数值除以总和变成概率。</span></div><div class="vcard"><span class="w">sine wave</span> <span class="ph"></span><span class="cn">正弦波</span><span class="df">位置编码中用于表示不同频率的波形。</span></div><div class="vcard"><span class="w">softmax</span> <span class="ph"></span><span class="cn">Softmax</span><span class="df">把一组分数变成概率分布的指数归一化函数。</span></div><div class="vcard"><span class="w">softmax over keys</span> <span class="ph"></span><span class="cn">对键做 Softmax</span><span class="df">将查询与各键的相似度转成注意力权重。</span></div><div class="vcard"><span class="w">trigonometric function</span> <span class="ph"></span><span class="cn">三角函数</span><span class="df">位置编码中使用的正弦/余弦等周期函数。</span></div><div class="vcard"><span class="w">vector</span> <span class="ph"></span><span class="cn">向量</span><span class="df">有方向和大小的数值数组，表示特征。</span></div><div class="vcard"><span class="w">weighted sum</span> <span class="ph"></span><span class="cn">加权求和</span><span class="df">用注意力权重对值向量求加权平均。</span></div></div></section><section class="vgroup" data-cat="代码与工程"><h2>代码与工程 <span class="ct">4 条</span></h2><div class="vlist"><div class="vcard"><span class="w">github</span> <span class="ph"></span><span class="cn">GitHub</span><span class="df">托管 Transformer 实现代码的代码托管平台。</span></div><div class="vcard"><span class="w">google</span> <span class="ph"></span><span class="cn">谷歌</span><span class="df">论文作者所属公司，非本讲座作者雇主。</span></div><div class="vcard"><span class="w">micrograd</span> <span class="ph"></span><span class="cn">micrograd</span><span class="df">Karpathy 的自动微分教学库，便于理解反向传播。</span></div><div class="vcard"><span class="w">pytorch</span> <span class="ph"></span><span class="cn">PyTorch</span><span class="df">常用深度学习框架，可用于实现 Transformer。</span></div></div></section><section class="vgroup" data-cat="训练与优化"><h2>训练与优化 <span class="ct">6 条</span></h2><div class="vlist"><div class="vcard"><span class="w">computation steps</span> <span class="ph"></span><span class="cn">计算步数</span><span class="df">信息在网络中传播所需经过的操作次数。</span></div><div class="vcard"><span class="w">one training sample</span> <span class="ph"></span><span class="cn">单步训练样本</span><span class="df">Transformer中生成一个词元即一个训练样本。</span></div><div class="vcard"><span class="w">output probabilities</span> <span class="ph"></span><span class="cn">输出概率</span><span class="df">模型对下一个词给出的概率分布。</span></div><div class="vcard"><span class="w">state of the art</span> <span class="ph"></span><span class="cn">当前最优</span><span class="df">在特定任务上取得最好性能的方法或结果。</span></div><div class="vcard"><span class="w">top probability</span> <span class="ph"></span><span class="cn">最高概率</span><span class="df">解码时选择概率最大的词作为输出。</span></div><div class="vcard"><span class="w">training sample</span> <span class="ph"></span><span class="cn">训练样本</span><span class="df">一次参数更新的输入-输出对。</span></div></div></section><div class="toolbar" id="vfilter"><a class="btn" href="index.html">← 返回文稿</a><button class="btn on" data-f="*">全部 108</button><button class="btn" data-f="神经网络基础">神经网络基础 75</button><button class="btn" data-f="反向传播与梯度">反向传播与梯度 4</button><button class="btn" data-f="数学与微积分">数学与微积分 19</button><button class="btn" data-f="代码与工程">代码与工程 4</button><button class="btn" data-f="训练与优化">训练与优化 6</button></div><script>(function(){var b=document.getElementById('vfilter');b.addEventListener('click',function(e){var t=e.target.closest('button[data-f]');if(!t)return;var f=t.getAttribute('data-f');b.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===t);});document.querySelectorAll('.vgroup').forEach(function(g){g.hidden=(f!=='*'&&g.getAttribute('data-cat')!==f);});});})();</script></article>
+
+  <p class="note">
+    点击任意句子从该处播放 · <kbd>空格</kbd> 播放/暂停 · <kbd>T</kbd> 中文 · <kbd>C</kbd> 连播 ·
+    <kbd>↑</kbd><kbd>↓</kbd> 上下句 · <kbd>Esc</kbd> 停止<br>
+    字幕由 ASR 转录并经 AI 校正重译，术语释义仅供参考。
+  </p>
+</main>
+
+<div class="kv">
+  <button class="btn top" id="b-top" title="回到顶部">↑</button>
+</div>
+<div class="tooltip" id="tip"></div>
+
+<script>
+var DATA=[];var TERMS={};
+</script>
+<script>
+
+</script>
+</body>
+</html>
